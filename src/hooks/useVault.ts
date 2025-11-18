@@ -22,8 +22,11 @@ export interface VaultItem {
   username: string;
   password: string;
   comment: string;
-  imageUrl?: string;
-  imagePath?: string;
+  fileUrl?: string;
+  filePath?: string;
+  fileName?: string;
+  fileType?: string;
+  fileSize?: number;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -56,19 +59,25 @@ export const useVault = () => {
     }
   };
 
-  // Upload image to storage
-  const uploadImage = async (file: File): Promise<{ url: string; path: string }> => {
+  // Upload file to storage
+  const uploadFile = async (file: File): Promise<{ url: string; path: string; name: string; type: string; size: number }> => {
     try {
       const timestamp = Date.now();
-      const imagePath = `vault-images/${timestamp}_${file.name}`;
-      const storageRef = ref(storage, imagePath);
+      const filePath = `vault-files/${timestamp}_${file.name}`;
+      const storageRef = ref(storage, filePath);
       
       await uploadBytes(storageRef, file);
       const url = await getDownloadURL(storageRef);
       
-      return { url, path: imagePath };
+      return { 
+        url, 
+        path: filePath,
+        name: file.name,
+        type: file.type,
+        size: file.size
+      };
     } catch (err: any) {
-      throw new Error('Image upload failed: ' + err.message);
+      throw new Error('File upload failed: ' + err.message);
     }
   };
 
@@ -78,15 +87,21 @@ export const useVault = () => {
     username: string,
     password: string,
     comment: string,
-    imageFile?: File
+    file?: File
   ) => {
     try {
       setError(null);
       
-      let imageData = {};
-      if (imageFile) {
-        const { url, path } = await uploadImage(imageFile);
-        imageData = { imageUrl: url, imagePath: path };
+      let fileData = {};
+      if (file) {
+        const { url, path, name, type, size } = await uploadFile(file);
+        fileData = { 
+          fileUrl: url, 
+          filePath: path,
+          fileName: name,
+          fileType: type,
+          fileSize: size
+        };
       }
       
       const docRef = await addDoc(collection(db, 'vault'), {
@@ -94,7 +109,7 @@ export const useVault = () => {
         username: username.trim(),
         password,
         comment: comment.trim(),
-        ...imageData,
+        ...fileData,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
@@ -114,8 +129,8 @@ export const useVault = () => {
     username: string,
     password: string,
     comment: string,
-    imageFile?: File,
-    keepExistingImage?: boolean
+    file?: File,
+    keepExistingFile?: boolean
   ) => {
     try {
       setError(null);
@@ -129,13 +144,19 @@ export const useVault = () => {
         updatedAt: serverTimestamp()
       };
       
-      if (imageFile) {
-        const { url, path } = await uploadImage(imageFile);
-        updateData.imageUrl = url;
-        updateData.imagePath = path;
-      } else if (!keepExistingImage) {
-        updateData.imageUrl = null;
-        updateData.imagePath = null;
+      if (file) {
+        const { url, path, name, type, size } = await uploadFile(file);
+        updateData.fileUrl = url;
+        updateData.filePath = path;
+        updateData.fileName = name;
+        updateData.fileType = type;
+        updateData.fileSize = size;
+      } else if (!keepExistingFile) {
+        updateData.fileUrl = null;
+        updateData.filePath = null;
+        updateData.fileName = null;
+        updateData.fileType = null;
+        updateData.fileSize = null;
       }
       
       await updateDoc(docRef, updateData);
