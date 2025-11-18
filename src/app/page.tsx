@@ -103,7 +103,7 @@ export default function HomePage() {
         data.password,
         data.comment,
         data.file,
-        !data.file && selectedItem?.fileUrl // Keep existing file if no new file uploaded
+        (!data.file) && (!!selectedItem?.fileUrl) // Keep existing file if no new file uploaded
       );
     } else {
       // Create mode
