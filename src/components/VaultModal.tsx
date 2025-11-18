@@ -17,10 +17,10 @@ interface VaultModalProps {
 }
 
 export function VaultModal({ isOpen, onClose, onSave, existingPlatforms, editItem }: VaultModalProps) {
-  const [platform, setPlatform] = useState(editItem?.platform || '');
-  const [username, setUsername] = useState(editItem?.username || '');
-  const [password, setPassword] = useState(editItem?.password || '');
-  const [comment, setComment] = useState(editItem?.comment || '');
+  const [platform, setPlatform] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [comment, setComment] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -30,6 +30,24 @@ export function VaultModal({ isOpen, onClose, onSave, existingPlatforms, editIte
   const contentRef = useRef<HTMLDivElement>(null);
 
   const isImage = file?.type.startsWith('image/');
+
+  // Sync state with editItem
+  useEffect(() => {
+    if (editItem) {
+      setPlatform(editItem.platform || '');
+      setUsername(editItem.username || '');
+      setPassword(editItem.password || '');
+      setComment(editItem.comment || '');
+    } else {
+      // Reset for new entry
+      setPlatform('');
+      setUsername('');
+      setPassword('');
+      setComment('');
+      setFile(null);
+      setFilePreview(null);
+    }
+  }, [editItem, isOpen]);
 
   useEffect(() => {
     if (contentRef.current) {
@@ -51,7 +69,7 @@ export function VaultModal({ isOpen, onClose, onSave, existingPlatforms, editIte
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       if (selectedFile.size > 5 * 1024 * 1024) {
-        alert('File too big. Max 5MB. What are you uploading? 😑');
+        alert('File too big. Max 5MB. What are you uploading? 😒');
         return;
       }
 
@@ -89,7 +107,8 @@ export function VaultModal({ isOpen, onClose, onSave, existingPlatforms, editIte
       });
       onClose();
     } catch (err) {
-      alert('Save failed. Nice job breaking it. 😑');
+      console.error(err);
+      alert('Save failed. Nice job breaking it. 😒');
     } finally {
       setSaving(false);
     }

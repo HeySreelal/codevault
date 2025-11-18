@@ -2,9 +2,9 @@
 
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { VaultItem } from '@/hooks/useVault';
-import { Edit2, Trash2 } from 'lucide-react';
+import { Edit2, Trash2, Eye, EyeOff, Copy, Check } from 'lucide-react';
 import { FileIcon } from './FileIcon';
 import gsap from 'gsap';
 
@@ -18,6 +18,8 @@ interface VaultCardProps {
 
 export function VaultCard({ item, index, onEdit, onDelete, onView }: VaultCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (cardRef.current) {
@@ -28,6 +30,22 @@ export function VaultCard({ item, index, onEdit, onDelete, onView }: VaultCardPr
       );
     }
   }, [index]);
+
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(item.password);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Copy failed:', err);
+    }
+  };
+
+  const handleTogglePassword = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowPassword(!showPassword);
+  };
 
   return (
     <div
@@ -67,11 +85,34 @@ export function VaultCard({ item, index, onEdit, onDelete, onView }: VaultCardPr
         <p className="text-sm text-[#888] mb-3">{item.username}</p>
       )}
 
-      {/* Password preview */}
-      <div className="flex items-center gap-2 mb-3">
-        <code className="text-xs text-[#666] font-mono">
-          {'•'.repeat(Math.min(item.password.length, 16))}
-        </code>
+      {/* Password */}
+      <div className="mb-3" onClick={(e) => e.stopPropagation()}>
+        <label className="text-[#666] text-xs mb-1.5 block hidden uppercase tracking-wide">Password</label>
+        <div className="flex items-center gap-2">
+          <code className="flex-1 px-3 py-2 bg-[#0a0a0a] border border-[#1a1a1a] rounded text-xs text-white font-mono truncate">
+            {showPassword ? item.password : '•'.repeat(Math.min(item.password.length, 16))}
+          </code>
+          <button
+            onClick={handleTogglePassword}
+            className="p-2 hover:bg-[#1a1a1a] rounded transition-colors duration-200 flex-shrink-0"
+            title={showPassword ? "Hide password" : "Show password"}
+          >
+            {showPassword ? 
+              <EyeOff size={14} className="text-[#888]" /> : 
+              <Eye size={14} className="text-[#888]" />
+            }
+          </button>
+          <button
+            onClick={handleCopy}
+            className="p-2 hover:bg-[#1a1a1a] rounded transition-colors duration-200 flex-shrink-0"
+            title="Copy password"
+          >
+            {copied ? 
+              <Check size={14} className="text-green-500" /> : 
+              <Copy size={14} className="text-[#888]" />
+            }
+          </button>
+        </div>
       </div>
 
       {/* File indicator */}

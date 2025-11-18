@@ -93,6 +93,30 @@ export default function HomePage() {
     }
   };
 
+  const handleSave = async (data: any) => {
+    if (data.id) {
+      // Edit mode
+      await updateVaultItem(
+        data.id,
+        data.platform,
+        data.username,
+        data.password,
+        data.comment,
+        data.file,
+        !data.file && selectedItem?.fileUrl // Keep existing file if no new file uploaded
+      );
+    } else {
+      // Create mode
+      await createVaultItem(
+        data.platform,
+        data.username,
+        data.password,
+        data.comment,
+        data.file
+      );
+    }
+  };
+
   const filteredItems = useMemo(() => {
     if (!searchQuery.trim()) return vaultItems;
     
@@ -209,7 +233,7 @@ export default function HomePage() {
             setSelectedItem(null);
             setEditMode(false);
           }}
-          onSave={editMode ? updateVaultItem : createVaultItem}
+          onSave={handleSave}
           existingPlatforms={getUniquePlatforms()}
           editItem={editMode ? selectedItem : null}
         />
