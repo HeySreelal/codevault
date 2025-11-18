@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { signOut } from 'firebase/auth';
+import { useAuth } from '@/hooks/useAuth';
 import { auth } from '@/lib/firebase';
 import { useVault, VaultItem } from '@/hooks/useVault';
 import gsap from 'gsap';
@@ -26,7 +26,7 @@ import { spaceGrotesk } from '@/utils/fonts';
 export default function HomePage() {
   const router = useRouter();
   const { vaultItems, loading, createVaultItem, updateVaultItem, deleteVaultItem, getUniquePlatforms } = useVault();
-  
+  const { logout } = useAuth(); 
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -69,8 +69,8 @@ export default function HomePage() {
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);
-      router.push('/login');
+        logout();
+        router.push('/login');
     } catch (err) {
       console.error('Logout failed:', err);
     }
