@@ -290,12 +290,17 @@ function VaultCard({
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
-        <div className="flex-1">
-          <h3 className="text-lg font-semibold text-white mb-1">{item.platform}</h3>
-          <p className="text-[#666] text-xs">{item.username}</p>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-lg font-semibold text-white mb-1.5 truncate">{item.platform}</h3>
+          {item.username && (
+            <p className="text-[#aaa] text-sm font-medium truncate">{item.username}</p>
+          )}
+          {!item.username && (
+            <p className="text-[#555] text-xs italic">no username</p>
+          )}
         </div>
         
-        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ml-2 flex-shrink-0">
           {item.imageUrl && (
             <button
               onClick={() => onViewImage(item)}
@@ -324,14 +329,15 @@ function VaultCard({
 
       {/* Password */}
       <div className="mb-3">
-        <label className="text-[#666] text-xs mb-1.5 block">Password</label>
+        <label className="text-[#666] text-xs mb-1.5 block uppercase tracking-wide">Password</label>
         <div className="flex items-center gap-2">
-          <code className="flex-1 px-3 py-2 bg-[#0a0a0a] border border-[#1a1a1a] rounded text-xs text-white font-mono">
-            {showPassword ? item.password : '•'.repeat(12)}
+          <code className="flex-1 px-3 py-2 bg-[#0a0a0a] border border-[#1a1a1a] rounded text-xs text-white font-mono truncate">
+            {showPassword ? item.password : '•'.repeat(Math.min(item.password.length, 16))}
           </code>
           <button
             onClick={() => setShowPassword(!showPassword)}
-            className="p-2 hover:bg-[#1a1a1a] rounded transition-colors duration-200"
+            className="p-2 hover:bg-[#1a1a1a] rounded transition-colors duration-200 flex-shrink-0"
+            title={showPassword ? "Hide password" : "Show password"}
           >
             {showPassword ? 
               <EyeOff size={14} className="text-[#888]" /> : 
@@ -340,7 +346,8 @@ function VaultCard({
           </button>
           <button
             onClick={() => handleCopy(item.password)}
-            className="p-2 hover:bg-[#1a1a1a] rounded transition-colors duration-200"
+            className="p-2 hover:bg-[#1a1a1a] rounded transition-colors duration-200 flex-shrink-0"
+            title="Copy password"
           >
             {copied ? 
               <Check size={14} className="text-green-500" /> : 
@@ -352,13 +359,26 @@ function VaultCard({
 
       {/* Comment */}
       {item.comment && (
-        <p className="text-[#666] text-xs leading-relaxed">{item.comment}</p>
+        <div className="mb-3">
+          <label className="text-[#666] text-xs mb-1.5 block uppercase tracking-wide">Notes</label>
+          <p className="text-[#888] text-xs leading-relaxed line-clamp-2">{item.comment}</p>
+        </div>
       )}
 
-      {/* Date */}
-      <p className="text-[#444] text-[10px] mt-4">
-        {item.createdAt?.toDate().toLocaleDateString()}
-      </p>
+      {/* Footer with date and indicators */}
+      <div className="flex items-center justify-between mt-4 pt-3 border-t border-[#1a1a1a]">
+        <p className="text-[#555] text-[10px] tracking-wide">
+          {item.createdAt?.toDate().toLocaleDateString()}
+        </p>
+        <div className="flex gap-1.5">
+          {item.imageUrl && (
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-500/50" title="Has image" />
+          )}
+          {item.comment && (
+            <div className="w-1.5 h-1.5 rounded-full bg-purple-500/50" title="Has notes" />
+          )}
+        </div>
+      </div>
     </div>
   );
 }
