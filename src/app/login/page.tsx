@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import gsap from 'gsap';
+import { spaceGrotesk } from '@/utils/fonts';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -14,7 +15,7 @@ export default function LoginPage() {
   const router = useRouter();
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const formRef = useRef<HTMLFormElement>(null);
+  const formRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
   const inputRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -162,7 +163,7 @@ export default function LoginPage() {
         <div className="text-center mb-12">
           <h1 
             ref={titleRef}
-            className="text-5xl font-bold text-white mb-3 tracking-tight"
+            className={`text-5xl font-bold text-white mb-3 tracking-tight ${spaceGrotesk.className}`}
           >
             vault
           </h1>
@@ -182,7 +183,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email */}
             <div 
-              ref={el => inputRefs.current[0] = el}
+              ref={(el) => { inputRefs.current[0] = el; }}
               className="group"
             >
               <label 
@@ -208,7 +209,7 @@ export default function LoginPage() {
 
             {/* Password */}
             <div 
-              ref={el => inputRefs.current[1] = el}
+              ref={(el) => { inputRefs.current[1] = el; }}
               className="group"
             >
               <label 

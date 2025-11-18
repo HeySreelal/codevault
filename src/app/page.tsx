@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { signOut } from 'firebase/auth';
+import { useAuth } from '@/hooks/useAuth';
 import { auth } from '@/lib/firebase';
 import { useVault, VaultItem } from '@/hooks/useVault';
 import gsap from 'gsap';
@@ -21,11 +21,12 @@ import {
   Check,
   X
 } from 'lucide-react';
+import { spaceGrotesk } from '@/utils/fonts';
 
 export default function HomePage() {
   const router = useRouter();
   const { vaultItems, loading, createVaultItem, updateVaultItem, deleteVaultItem, getUniquePlatforms } = useVault();
-  
+  const { logout } = useAuth(); 
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -68,8 +69,8 @@ export default function HomePage() {
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);
-      router.push('/login');
+        logout();
+        router.push('/login');
     } catch (err) {
       console.error('Logout failed:', err);
     }
@@ -123,7 +124,7 @@ export default function HomePage() {
         className="border-b border-[#1a1a1a] px-6 py-4"
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <h1 className="text-2xl font-bold tracking-tight">vault</h1>
+          <h1 className={`text-2xl font-bold tracking-tight ${spaceGrotesk.className}`}>vault</h1>
           <button
             onClick={handleLogout}
             className="p-2 hover:bg-[#1a1a1a] rounded-lg transition-colors duration-200"

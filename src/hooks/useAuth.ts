@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import { 
   signInWithEmailAndPassword, 
+  signOut,
   setPersistence, 
   browserLocalPersistence,
   AuthError 
@@ -36,16 +37,8 @@ export const useAuth = () => {
     setError(null);
 
     try {
-      // Set persistence to LOCAL
       await setPersistence(auth, browserLocalPersistence);
-      
-      // Sign in
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      
-      // Set cookie for middleware
-      const token = await userCredential.user.getIdToken();
-      document.cookie = `auth-token=${token}; path=/; max-age=3600; SameSite=Strict`;
-      
       return userCredential.user;
     } catch (err) {
       const authError = err as AuthError;
@@ -57,6 +50,20 @@ export const useAuth = () => {
     }
   };
 
-  return { login, loading, error };
-};
+  const logout = async () => {
+    setLoading(true);
+    setError(null);
 
+    try {
+      await signOut(auth);
+    } catch (err) {
+      const authError = err as AuthError;
+      setError(authError.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { login, logout, loading, error };
+};
