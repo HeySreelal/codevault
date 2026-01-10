@@ -165,6 +165,14 @@ export default function HomePage() {
 
   const uniquePlatforms = getUniquePlatforms();
 
+  const platformCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    vaultItems.forEach(item => {
+      counts[item.platform] = (counts[item.platform] || 0) + 1;
+    });
+    return counts;
+  }, [vaultItems]);
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col">
       {/* Navbar */}
@@ -195,24 +203,36 @@ export default function HomePage() {
             <div className="space-y-1">
               <button
                 onClick={() => setSelectedPlatform(null)}
-                className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors duration-200 ${selectedPlatform === null
+                className={`group w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors duration-200 ${selectedPlatform === null
                   ? 'bg-[#222] text-white font-medium'
                   : 'text-[#888] hover:bg-[#111] hover:text-[#ccc]'
                   }`}
               >
-                All
+                <span className="truncate flex-1 mr-2 text-left">All</span>
+                <span className={`flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-full text-[10px] transition-colors ${selectedPlatform === null
+                  ? 'bg-white text-black'
+                  : 'bg-[#1a1a1a] text-[#666] group-hover:bg-[#222] group-hover:text-[#ccc]'
+                  } flex-shrink-0`}>
+                  {vaultItems.length}
+                </span>
               </button>
               {uniquePlatforms.map(platform => (
                 <button
                   key={platform}
                   onClick={() => setSelectedPlatform(platform)}
-                  className={`w-full text-left px-3 py-2 rounded-md text-sm truncate transition-colors duration-200 ${selectedPlatform === platform
+                  className={`group w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors duration-200 ${selectedPlatform === platform
                     ? 'bg-[#222] text-white font-medium'
                     : 'text-[#888] hover:bg-[#111] hover:text-[#ccc]'
                     }`}
                   title={platform}
                 >
-                  {platform}
+                  <span className="truncate flex-1 mr-2 text-left">{platform}</span>
+                  <span className={`flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-full text-[10px] transition-colors ${selectedPlatform === platform
+                    ? 'bg-white text-black'
+                    : 'bg-[#1a1a1a] text-[#666] group-hover:bg-[#222] group-hover:text-[#ccc]'
+                    } flex-shrink-0`}>
+                    {platformCounts[platform] || 0}
+                  </span>
                 </button>
               ))}
             </div>

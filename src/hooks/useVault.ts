@@ -183,7 +183,9 @@ export const useVault = () => {
   // Get unique platforms for autocomplete
   const getUniquePlatforms = (): string[] => {
     const platforms = vaultItems.map(item => item.platform);
-    return Array.from(new Set(platforms)).sort();
+    return Array.from(new Set(platforms)).sort((a, b) => 
+      a.localeCompare(b, undefined, { sensitivity: 'base' })
+    );
   };
 
   useEffect(() => {
