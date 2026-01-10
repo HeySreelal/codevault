@@ -28,6 +28,7 @@ export default function HomePage() {
   const searchRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const sidebarRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -65,6 +66,22 @@ export default function HomePage() {
     });
 
     return () => ctx.revert();
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === '/' && document.activeElement !== searchInputRef.current) {
+        const tagName = document.activeElement?.tagName.toLowerCase();
+        // Don't focus if user is typing in another input
+        if (tagName !== 'input' && tagName !== 'textarea' && tagName !== 'select') {
+          e.preventDefault();
+          searchInputRef.current?.focus();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const handleLogout = async () => {
@@ -179,8 +196,8 @@ export default function HomePage() {
               <button
                 onClick={() => setSelectedPlatform(null)}
                 className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors duration-200 ${selectedPlatform === null
-                    ? 'bg-[#222] text-white font-medium'
-                    : 'text-[#888] hover:bg-[#111] hover:text-[#ccc]'
+                  ? 'bg-[#222] text-white font-medium'
+                  : 'text-[#888] hover:bg-[#111] hover:text-[#ccc]'
                   }`}
               >
                 All
@@ -190,8 +207,8 @@ export default function HomePage() {
                   key={platform}
                   onClick={() => setSelectedPlatform(platform)}
                   className={`w-full text-left px-3 py-2 rounded-md text-sm truncate transition-colors duration-200 ${selectedPlatform === platform
-                      ? 'bg-[#222] text-white font-medium'
-                      : 'text-[#888] hover:bg-[#111] hover:text-[#ccc]'
+                    ? 'bg-[#222] text-white font-medium'
+                    : 'text-[#888] hover:bg-[#111] hover:text-[#ccc]'
                     }`}
                   title={platform}
                 >
@@ -208,6 +225,7 @@ export default function HomePage() {
             <div className="flex-1 relative">
               <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#666]" />
               <input
+                ref={searchInputRef}
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
