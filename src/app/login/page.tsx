@@ -1,5 +1,3 @@
-// src/app/login/page.tsx
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -8,9 +6,11 @@ import { useAuth } from '@/hooks/useAuth';
 import gsap from 'gsap';
 import { spaceGrotesk } from '@/utils/fonts';
 
+// HARCODED EMAIL FOR SINGLE USER MODE
+const USER_EMAIL = 'heysreelal@gmail.com';
+
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [passphrase, setPassphrase] = useState('');
   const { login, loading, error } = useAuth();
   const router = useRouter();
 
@@ -18,72 +18,86 @@ export default function LoginPage() {
   const formRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
-  const inputRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const inputRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
   const patternRef = useRef<HTMLDivElement>(null);
 
+  // Scramble Text Effect Util
+  const scrambleText = (element: HTMLElement, finalText: string, duration: number = 1) => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()';
+    const tl = gsap.timeline();
+
+    tl.to(element, {
+      duration: duration,
+      onUpdate: function () {
+        const progress = this.progress();
+        const scrambled = finalText.split('').map((char, index) => {
+          if (progress > (index / finalText.length)) {
+            return char;
+          }
+          return chars[Math.floor(Math.random() * chars.length)];
+        }).join('');
+        element.innerText = scrambled;
+      },
+      onComplete: () => {
+        element.innerText = finalText;
+      }
+    });
+
+    return tl;
+  };
+
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Background pattern fade in
+      // 1. Matrix/Cyber Pattern Background
       if (patternRef.current) {
         gsap.fromTo(
           patternRef.current,
-          { opacity: 0 },
-          { opacity: 0.03, duration: 1.5, ease: 'power1.out' }
+          { opacity: 0, scale: 1.1 },
+          { opacity: 0.05, scale: 1, duration: 2, ease: 'power2.out' }
         );
       }
 
-      // Title slides up with fade
+      // 2. Title Scramble
       if (titleRef.current) {
-        gsap.fromTo(
-          titleRef.current,
-          { y: 20, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.6, ease: 'power2.out' }
-        );
+        gsap.set(titleRef.current, { opacity: 1 });
+        scrambleText(titleRef.current, 'VAULT', 1.5);
       }
 
-      // Subtitle follows
+      // 3. Subtitle Fade In
       if (subtitleRef.current) {
         gsap.fromTo(
           subtitleRef.current,
-          { y: 15, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.6, delay: 0.15, ease: 'power2.out' }
+          { y: 10, opacity: 0, letterSpacing: '0.1em' },
+          { y: 0, opacity: 0.6, letterSpacing: '0.3em', duration: 1, delay: 0.8, ease: 'power2.out' }
         );
       }
 
-      // Form container subtle scale + fade
+      // 4. Form Container Reveal
       if (formRef.current) {
         gsap.fromTo(
           formRef.current,
-          { scale: 0.96, opacity: 0 },
-          { scale: 1, opacity: 1, duration: 0.7, delay: 0.3, ease: 'power2.out' }
+          { y: 30, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.8, delay: 0.5, ease: 'back.out(1.7)' }
         );
       }
 
-      // Inputs stagger in
-      inputRefs.current.forEach((input, i) => {
-        if (input) {
-          gsap.fromTo(
-            input,
-            { x: -10, opacity: 0 },
-            { 
-              x: 0, 
-              opacity: 1, 
-              duration: 0.5, 
-              delay: 0.5 + (i * 0.1),
-              ease: 'power2.out' 
-            }
-          );
-        }
-      });
+      // 5. Input Reveal
+      if (inputRef.current) {
+        gsap.fromTo(
+          inputRef.current,
+          { overflow: 'hidden', width: 0, opacity: 0 },
+          { width: '100%', opacity: 1, duration: 0.8, delay: 1.0, ease: 'power3.inOut' }
+        );
+      }
 
-      // Button last
+      // 6. Button Reveal
       if (buttonRef.current) {
         gsap.fromTo(
           buttonRef.current,
-          { y: 10, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.5, delay: 0.8, ease: 'power2.out' }
+          { scale: 0.8, opacity: 0 },
+          { scale: 1, opacity: 1, duration: 0.5, delay: 1.4, ease: 'back.out' }
         );
       }
     });
@@ -91,156 +105,132 @@ export default function LoginPage() {
     return () => ctx.revert();
   }, []);
 
+  // Error Animation
   useEffect(() => {
     if (error && errorRef.current) {
       gsap.fromTo(
         errorRef.current,
-        { height: 0, opacity: 0, marginBottom: 0 },
-        { 
+        { height: 0, opacity: 0, marginTop: 0 },
+        {
           height: 'auto',
-          opacity: 1, 
-          marginBottom: 24,
+          opacity: 1,
+          marginTop: 20,
           duration: 0.4,
           ease: 'power2.out'
         }
       );
+
+      // Shake form on error
+      if (formRef.current) {
+        gsap.to(formRef.current, {
+          x: -10,
+          duration: 0.1,
+          yoyo: true,
+          repeat: 5,
+          ease: 'power2.inOut'
+        });
+      }
     }
   }, [error]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
-      await login(email, password);
-      
-      // Smooth fade out
-      if (containerRef.current) {
-        gsap.to(containerRef.current, {
-          opacity: 0,
-          duration: 0.4,
-          ease: 'power2.in',
-          onComplete: () => router.push('/')
-        });
-      }
+      await login(USER_EMAIL, passphrase);
+
+      // Success Exit Animation
+      const tl = gsap.timeline({
+        onComplete: () => router.push('/')
+      });
+
+      // Shrink and fade everything
+      tl.to(formRef.current, { scale: 0.9, opacity: 0, duration: 0.3 })
+        .to([titleRef.current, subtitleRef.current], { y: -20, opacity: 0, duration: 0.3 }, "<")
+        .to(patternRef.current, { opacity: 0, duration: 0.5 }, "<");
+
     } catch (err) {
-      // Subtle shake on error
-      if (formRef.current) {
-        gsap.to(formRef.current, {
-          x: -8,
-          duration: 0.1,
-          yoyo: true,
-          repeat: 3,
-          ease: 'power2.inOut'
-        });
-      }
+      // Error is handled by useEffect
+      setPassphrase(''); // Clear wrong passphrase
     }
   };
 
   return (
-    <div 
+    <div
       ref={containerRef}
-      className="relative min-h-screen bg-[#0a0a0a] flex items-center justify-center p-4 overflow-hidden"
+      className="relative min-h-screen bg-[#050505] flex items-center justify-center p-4 overflow-hidden"
     >
-      {/* Subtle grid pattern background */}
-      <div 
+      {/* Dynamic Cyber Pattern */}
+      <div
         ref={patternRef}
-        className="absolute inset-0 opacity-0"
+        className="absolute inset-0 opacity-0 pointer-events-none"
         style={{
           backgroundImage: `
-            linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)
+            linear-gradient(rgba(0, 255, 100, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 255, 100, 0.03) 1px, transparent 1px)
           `,
-          backgroundSize: '50px 50px'
+          backgroundSize: '40px 40px',
+          maskImage: 'radial-gradient(circle at center, black 40%, transparent 100%)'
         }}
       />
 
-      {/* Gradient orbs */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-white/[0.02] rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-white/[0.02] rounded-full blur-3xl" />
+      {/* Background Glows */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-green-500/[0.03] rounded-full blur-[100px]" />
 
-      <div className="relative w-full max-w-md z-10">
+      <div className="relative w-full max-w-sm z-10 flex flex-col items-center">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 
+        <div className="text-center mb-16">
+          <h1
             ref={titleRef}
-            className={`text-5xl font-bold text-white mb-3 tracking-tight ${spaceGrotesk.className}`}
+            className={`text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-white/50 mb-2 tracking-tighter ${spaceGrotesk.className}`}
+            style={{ fontFamily: 'monospace' }} // Fallback/Style choice
           >
-            vault
+            VAULT
           </h1>
-          <p 
+          <p
             ref={subtitleRef}
-            className="text-[#666] text-sm tracking-wide"
+            className="text-green-500/60 text-[10px] tracking-[0.3em] font-mono uppercase"
           >
-            SECURE ACCESS PORTAL
+            Restricted Access
           </p>
         </div>
 
         {/* Form */}
-        <div 
+        <div
           ref={formRef}
-          className="relative"
+          className="w-full relative"
         >
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email */}
-            <div 
-              ref={(el) => { inputRefs.current[0] = el; }}
-              className="group"
+          <form onSubmit={handleSubmit} className="space-y-8">
+
+            {/* Secret Passphrase Input */}
+            <div
+              ref={inputRef}
+              className="relative group w-full"
             >
-              <label 
-                htmlFor="email" 
-                className="block text-[#888] text-xs font-medium mb-2 tracking-wide uppercase"
-              >
-                Email Address
-              </label>
-              <div className="relative">
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-0 py-3 bg-transparent border-0 border-b border-[#222] text-white text-sm focus:outline-none focus:border-[#444] transition-colors duration-300 placeholder:text-[#333]"
-                  placeholder="your@email.com"
-                  required
-                  disabled={loading}
-                />
-                <div className="absolute bottom-0 left-0 h-[1px] w-0 bg-white transition-all duration-300 group-focus-within:w-full" />
-              </div>
+              <div className="absolute -inset-1 bg-gradient-to-r from-green-500/20 via-white/10 to-green-500/20 rounded-lg blur opacity-0 group-focus-within:opacity-100 transition duration-1000 group-hover:duration-200"></div>
+
+              <input
+                id="passphrase"
+                type="password"
+                value={passphrase}
+                onChange={(e) => setPassphrase(e.target.value)}
+                className="relative block w-full px-4 py-4 bg-[#0a0a0a] border border-[#222] rounded-lg text-center text-white text-lg tracking-[0.5em] focus:outline-none focus:border-green-500/50 focus:ring-1 focus:ring-green-500/20 transition-all duration-300 placeholder:text-[#222] placeholder:tracking-normal placeholder:text-sm"
+                placeholder="ENTER SECRET PHRASE"
+                autoComplete="off"
+                autoFocus
+                required
+                disabled={loading}
+              />
             </div>
 
-            {/* Password */}
-            <div 
-              ref={(el) => { inputRefs.current[1] = el; }}
-              className="group"
-            >
-              <label 
-                htmlFor="password" 
-                className="block text-[#888] text-xs font-medium mb-2 tracking-wide uppercase"
-              >
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-0 py-3 bg-transparent border-0 border-b border-[#222] text-white text-sm focus:outline-none focus:border-[#444] transition-colors duration-300 placeholder:text-[#333]"
-                  placeholder="••••••••••••"
-                  required
-                  disabled={loading}
-                />
-                <div className="absolute bottom-0 left-0 h-[1px] w-0 bg-white transition-all duration-300 group-focus-within:w-full" />
-              </div>
-            </div>
-
-            {/* Error */}
+            {/* Error Message */}
             {error && (
-              <div 
+              <div
                 ref={errorRef}
                 className="overflow-hidden"
               >
-                <div className="border-l-2 border-[#ff3333] bg-[#ff3333]/5 px-4 py-3">
-                  <p className="text-[#ff6666] text-xs font-medium">{error}</p>
+                <div className="bg-red-500/10 border border-red-500/20 rounded px-4 py-2 text-center">
+                  <p className="text-red-400 text-xs font-mono">{error}</p>
                 </div>
               </div>
             )}
@@ -250,19 +240,14 @@ export default function LoginPage() {
               ref={buttonRef}
               type="submit"
               disabled={loading}
-              className="relative w-full py-3.5 bg-white text-black text-sm font-semibold tracking-wide uppercase overflow-hidden group disabled:opacity-40 disabled:cursor-not-allowed transition-opacity duration-300"
+              className="w-full group relative px-6 py-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all duration-300 overflow-hidden"
             >
-              <span className="relative z-10">
-                {loading ? 'AUTHENTICATING...' : 'ACCESS VAULT'}
+              <div className="absolute inset-0 w-0 bg-white/5 transition-all duration-[250ms] ease-out group-hover:w-full opacity-10"></div>
+              <span className="relative text-xs font-mono tracking-widest text-gray-400 group-hover:text-white transition-colors">
+                {loading ? 'DECRYPTING...' : 'INITIATE_SEQUENCE'}
               </span>
-              <div className="absolute inset-0 bg-[#ddd] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
             </button>
           </form>
-
-          {/* Bottom text */}
-          <p className="text-center text-[#444] text-[10px] mt-8 tracking-widest uppercase">
-            Authorized Personnel Only
-          </p>
         </div>
       </div>
     </div>
